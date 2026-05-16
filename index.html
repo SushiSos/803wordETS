@@ -22,7 +22,20 @@ body{background:#f5f7fa;font-family:微软雅黑;}
 .doc-box{width:100%;max-width:900px;height:85vh;background:#fff;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;}
 .bar{display:flex;justify-content:space-between;padding:12px 15px;border-bottom:1px solid #eee;}
 .close{border:none;background:#2c7be5;color:#fff;padding:5px 14px;border-radius:5px;cursor:pointer;}
-.content{flex:1;padding:20px;overflow:auto;line-height:1.8;font-size:15px;}
+/* 重点：恢复换行、段落、空格排版 */
+.content{
+    flex:1;
+    padding:25px;
+    overflow:auto;
+    line-height: 2;
+    font-size:16px;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+.content p{
+    margin-bottom: 16px !important;
+    text-indent: 2em;
+}
 </style>
 </head>
 <body>
@@ -44,11 +57,14 @@ body{background:#f5f7fa;font-family:微软雅黑;}
 </div>
 
 <script>
-// 在这里填写文档 格式：文件名必须和仓库一致
 let docList = [
     {
-        name:"第11周周末听说套题练习",
-        path:"docs/11.docx"
+        name:"英语听力答案汇总",
+        path:"docs/yingyu.docx"
+    },
+    {
+        name:"语文复习资料",
+        path:"docs/yuwen.docx"
     }
 ];
 
@@ -57,7 +73,6 @@ let pop = document.getElementById("popBox");
 let docHtml = document.getElementById("docHtml");
 let docName = document.getElementById("docName");
 
-// 渲染列表
 function render(arr){
     listDom.innerHTML = "";
     arr.forEach(item=>{
@@ -70,7 +85,6 @@ function render(arr){
     })
 }
 
-// 打开预览
 async function openDoc(filePath,title){
     docName.innerText = title;
     pop.classList.add("show");
@@ -78,39 +92,39 @@ async function openDoc(filePath,title){
     try{
         let res = await fetch(filePath);
         let arrayBuffer = await res.arrayBuffer();
-        let result = await mammoth.convertToHtml({arrayBuffer:arrayBuffer});
+        // 保留原文所有格式、换行、空格
+        let result = await mammoth.convertToHtml({arrayBuffer:arrayBuffer},{
+            styleMap: [
+                "p[heading1] => h1",
+                "p[heading2] => h2",
+                "p => p"
+            ]
+        });
         docHtml.innerHTML = result.value;
     }catch(e){
         docHtml.innerHTML = `
         <p style="color:red;text-align:center">
-            加载失败！<br>
-            1.确认文档上传到 docs 文件夹<br>
-            2.文件名、后缀完全一致<br>
-            3.建议文件名只用英文/数字
+            加载失败！检查文件路径与文件名
         </p>
         `;
     }
 }
 
-// 关闭弹窗
 function hideDoc(){
     pop.classList.remove("show");
     docHtml.innerHTML = "";
 }
 
-// 点击弹窗空白关闭
 pop.onclick = e=>{
     if(e.target === pop) hideDoc();
 }
 
-// 搜索
 document.getElementById("search").oninput = e=>{
     let key = e.target.value;
     let filter = docList.filter(v=>v.name.includes(key));
     render(filter);
 }
 
-// 初始化
 render(docList);
 </script>
 </body>
