@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文档资源分享站</title>
+    <!-- 引入docx在线解析库 -->
+    <script src="https://cdn.jsdelivr.net/npm/docx-preview@0.1.17/dist/docx-preview.min.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{background:#f4f6f9;font-family:微软雅黑;}
+        .header{background:#1677ff;color:#fff;padding:25px;text-align:center;}
+        .search{width:90%;max-width:500px;padding:12px;border-radius:30px;border:none;margin-top:15px;outline:none;}
+        .container{max-width:1200px;margin:30px auto;padding:0 15px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;}
+        .doc-card{background:#fff;padding:15px;border-radius:10px;box-shadow:0 2px 8px #eee;cursor:pointer;transition:0.2s;}
+        .doc-card:hover{transform:translateY(-3px);}
+        .doc-icon{font-size:40px;color:#1677ff;margin-bottom:10px;}
+        /* 预览弹窗 */
+        .doc-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:none;z-index:999;}
+        .doc-modal.show{display:block;}
+        .modal-box{width:95%;height:90vh;background:#fff;margin:5vh auto;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;}
+        .modal-top{display:flex;justify-content:space-between;padding:15px;border-bottom:1px solid #eee;}
+        .close-btn{border:none;background:red;color:white;padding:6px 15px;border-radius:5px;cursor:pointer;}
+        .doc-content{flex:1;padding:20px;overflow:auto;}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>学习文档分享站</h1>
+        <input class="search" id="search" placeholder="搜索文档名称">
+    </div>
+
+    <div class="container" id="docList"></div>
+
+    <!-- 文档预览弹窗 -->
+    <div class="doc-modal" id="docModal">
+        <div class="modal-box">
+            <div class="modal-top">
+                <h3 id="docTitle">文档预览</h3>
+                <button class="close-btn" onclick="closeDoc()">关闭</button>
+            </div>
+            <div class="doc-content" id="docView"></div>
+        </div>
+    </div>
+
+<script>
+// 填写你的文档数据 路径=docs/你的文档名.docx
+const docData = [
+    {
+        title: "英语知识点总结",
+        file: "docs/英语总结.docx"
+    },
+    {
+        title: "语文作文素材",
+        file: "docs/作文素材.docx"
+    },
+    {
+        title: "数学错题整理",
+        file: "docs/数学错题.docx"
+    }
+];
+
+const listBox = document.getElementById("docList");
+const modal = document.getElementById("docModal");
+const docView = document.getElementById("docView");
+const docTitle = document.getElementById("docTitle");
+
+// 渲染文档列表
+function renderDoc(list){
+    listBox.innerHTML = "";
+    list.forEach(item=>{
+        listBox.innerHTML += `
+        <div class="doc-card" onclick="openDoc('${item.file}','${item.title}')">
+            <div class="doc-icon">📄</div>
+            <h4>${item.title}</h4>
+        </div>
+        `
+    })
+}
+
+// 打开预览docx
+async function openDoc(url,name){
+    docTitle.innerText = name;
+    modal.classList.add("show");
+    docView.innerHTML = "<p>正在加载文档...</p>";
+    try{
+        const res = await fetch(url);
+        const blob = await res.blob();
+        docView.innerHTML = "";
+        docx.renderAsync(blob, docView);
+    }catch(err){
+        docView.innerHTML = "<p style='color:red'>文档加载失败，请检查文件路径</p>";
+    }
+}
+
+// 关闭预览
+function closeDoc(){
+    modal.classList.remove("show");
+    docView.innerHTML = "";
+}
+
+// 搜索功能
+document.getElementById("search").addEventListener("input",e=>{
+    let key = e.target.value.trim();
+    let filter = docData.filter(v=>v.title.includes(key));
+    renderDoc(filter);
+})
+
+// 初始加载
+renderDoc(docData);
+</script>
+</body>
+</html>
